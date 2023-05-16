@@ -1,0 +1,12 @@
+defmodule App.Billing.Account do
+  use Ecto.Schema
+
+  schema "billing_accounts" do
+    field :units_per_month_limit, :integer, default: 0
+
+    has_many :usage_events, App.Billing.UsageEvent
+    has_many :credits, App.Billing.AccountCredit, preload_order: [desc: :inserted_at]
+
+    timestamps()
+  end
+end
