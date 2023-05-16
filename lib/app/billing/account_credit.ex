@@ -2,6 +2,9 @@ defmodule App.Billing.AccountCredit do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @primary_key {:id, :binary_id, autogenerate: true}
+  @foreign_key_type :binary_id
+
   schema "billing_account_credits" do
     field :quantity, :integer
     field :quantity_consumed, :integer, default: 0

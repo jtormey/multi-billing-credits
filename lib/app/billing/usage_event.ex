@@ -2,6 +2,9 @@ defmodule App.Billing.UsageEvent do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @primary_key {:id, :binary_id, autogenerate: true}
+  @foreign_key_type :binary_id
+
   schema "billing_usage_events" do
     field :quantity, :integer
     field :quantity_credited, :integer

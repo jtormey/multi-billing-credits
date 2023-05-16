@@ -7,20 +7,27 @@ defmodule App.Billing do
   alias App.Billing.AccountCredit
   alias App.Billing.UsageEvent
 
-  def will_exceed_usage_limit?(account, quantity) do
-    staged_multi =
-      account
-      |> record_usage_event_multi(quantity)
-      |> Ecto.Multi.to_list()
+  ## Record Usage
 
-    {:insert, usage_event, _} = Keyword.fetch!(staged_multi, :usage_event)
+  def record_usage_event(account, quantity) do
+    multi = record_usage_event_multi(account, quantity)
+
+    if will_exceed_usage_limit?(multi) do
+      {:error, :will_exceed_usage}
+    else
+      Repo.transaction(multi)
+    end
+  end
+
+  def will_exceed_usage_limit?(multi) do
+    {:insert, usage_event, _} = Keyword.fetch!(Ecto.Multi.to_list(multi), :usage_event)
 
     Ecto.Changeset.fetch_change!(usage_event, :quantity_exceeded) > 0
   end
 
   def record_usage_event_multi(account, quantity) do
     usage = get_usage(account)
-    credits = get_active_credits(account)
+    credits = list_active_credits(account)
 
     quantity_exceeded = max(0, usage + quantity - account.units_per_month_limit)
 
@@ -58,6 +65,8 @@ defmodule App.Billing do
     end)
   end
 
+  ## Usage
+
   def get_usage(account) do
     Repo.one(
       from a in Account,
@@ -67,7 +76,15 @@ defmodule App.Billing do
     )
   end
 
-  def get_active_credits(account) do
+  ## Credits Management
+
+  def sum_active_credits(account) do
+    active_credits_query(account)
+    |> select([d], coalesce(sum(d.quantity - d.quantity_consumed), 0))
+    |> Repo.one()
+  end
+
+  def list_active_credits(account) do
     active_credits_query(account)
     |> order_by(asc: :inserted_at)
     |> Repo.all()
@@ -80,5 +97,21 @@ defmodule App.Billing do
     |> where([d], d.account_id == ^account.id)
     |> where([d], is_nil(d.expires_at) or d.expires_at > ^now)
     |> where([d], d.quantity_consumed < d.quantity)
+  end
+
+  def credit_account(account, quantity, expires_at \\ nil) do
+    %AccountCredit{account: account}
+    |> AccountCredit.credit_changeset(quantity, expires_at)
+    |> Repo.insert!()
+  end
+
+  ## Account
+
+  def get_or_create_account() do
+    with nil <- Repo.one(Account) do
+      %Account{}
+      |> Ecto.Changeset.change(units_per_month_limit: 10)
+      |> Repo.insert!()
+    end
   end
 end

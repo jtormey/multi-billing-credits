@@ -1,0 +1,53 @@
+<.header>
+  User
+</.header>
+
+<.list>
+  <:item title="Basic">
+    <.button phx-click="record_usage" phx-value-quantity="1">
+      Consume 1
+    </.button>
+  </:item>
+  <:item title="Premium">
+    <.button phx-click="record_usage" phx-value-quantity="5">
+      Consume 5
+    </.button>
+  </:item>
+  <:item title="Super">
+    <.button phx-click="record_usage" phx-value-quantity="10">
+      Consume 10
+    </.button>
+  </:item>
+</.list>
+
+<div class="border-t border-zinc-900 my-24" />
+
+<.header>
+  Admin
+  <:actions>
+    <.button phx-click="add_credit">
+      Add credit
+    </.button>
+  </:actions>
+</.header>
+
+<.list>
+  <:item title="Usage">
+    <%= @account_usage %>
+  </:item>
+  <:item title="Usage limit">
+    <%= @account.units_per_month_limit %>
+  </:item>
+  <:item title="Credit balance">
+    <%= @credits_balance %>
+  </:item>
+</.list>
+
+<.table id="credits-table" rows={@streams.credits}>
+  <:col :let={{_id, credit}} label="Quantity Consumed">
+    <%= credit.quantity_consumed %>
+  </:col>
+  <:col :let={{_id, credit}} label="Quantity">
+    <%= credit.quantity %>
+  </:col>
+</.table>

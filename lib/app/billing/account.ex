@@ -1,6 +1,8 @@
 defmodule App.Billing.Account do
   use Ecto.Schema
 
+  @primary_key {:id, :binary_id, autogenerate: true}
+
   schema "billing_accounts" do
     field :units_per_month_limit, :integer, default: 0
 
