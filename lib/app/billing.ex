@@ -107,10 +107,10 @@ defmodule App.Billing do
 
   ## Account
 
-  def get_or_create_account() do
+  def get_or_create_account(limit \\ 10) do
     with nil <- Repo.one(Account) do
       %Account{}
-      |> Ecto.Changeset.change(units_per_month_limit: 10)
+      |> Ecto.Changeset.change(units_per_month_limit: limit)
       |> Repo.insert!()
     end
   end
