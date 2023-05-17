@@ -15,8 +15,12 @@ defmodule AppWeb.DemoLive do
   end
 
   def handle_event("add_credit", _params, socket) do
-    credit = Billing.credit_account(socket.assigns.account, Enum.random(1..10))
-    {:noreply, stream_insert(socket, :credits, credit)}
+    account = socket.assigns.account
+
+    {:noreply,
+     socket
+     |> stream_insert(:credits, Billing.credit_account(account, Enum.random(1..10)))
+     |> assign(:credits_balance, Billing.sum_active_credits(account))}
   end
 
   def handle_event("record_usage", %{"quantity" => quantity}, socket) do
